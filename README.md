@@ -9,14 +9,20 @@ The BREAD token v1 was deployed on Polygon PoS and the underlying yield generati
 
 ## Setup
 
-bash```clone```
+clone and enter this repo then run:
 
-bash```forge install```
+```bash
+forge install
+```
 
-bash```forge compile```
+```bash
+forge compile
+```
 
 ## Test
 
-bash```forge test --fork-url <YOUR QUICKNODE GNOSIS CHAIN ENDPOINT> --fork-block-number 31060200 -vv```
+```bash
+forge test --fork-url "YOUR QUICKNODE GNOSIS CHAIN ENDPOINT" --fork-block-number 31060200 -vv
+```
 
 create an account [here](https://www.quicknode.com/) and get a gnosis chain endpoint on the free tier to get running the test suite.
