@@ -70,15 +70,12 @@ contract Bread is
     }
 
     function burn(uint256 amount, address receiver) external {
-        if (amount < 2) revert BurnZero();
+        if (amount == 0) revert BurnZero();
         _burn(msg.sender, amount);
         
-        /// @dev we need to reduce withdrawal amount by 1 wei
-        /// because the sxDAI contract can round down by 1 and cause issues.
-        uint256 withdrawAmount = amount-1;
-        sexyDai.withdraw(withdrawAmount, address(this), address(this));
-        wxDai.withdraw(withdrawAmount);
-        _nativeTransfer(receiver, withdrawAmount);
+        sexyDai.withdraw(amount, address(this), address(this));
+        wxDai.withdraw(amount);
+        _nativeTransfer(receiver, amount);
 
         emit Burned(receiver, amount);
     }
