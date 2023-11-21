@@ -140,11 +140,13 @@ contract BreadTest is Test {
         assertEq(supplyAfter, 0);
 
         /// @dev NOTE we are "stealing" some wei from the yield when we mint and burn
-        /// since sxDAI can round down by 1 wei
+        /// since sxDAI can round down by 1 wei -- this should be fine, 
+        /// we just need to claim a little less than the total yield on claims
+        /// and burn e.g 1 BREAD after deployment so that no user runs into burn revert
+        /// (since no one can burn the last wei of the supply, which can trigger it)
         yieldBefore = yieldAfter;
         yieldAfter = breadToken.yieldAccrued();
-        assertGt(yieldBefore, yieldAfter);
-        assertEq(yieldBefore - yieldAfter, 2);
+        assertEq(yieldBefore - 2, yieldAfter);
 
         uint256 ownerBalBefore = wxDai.balanceOf(address(this));
         breadToken.claimYield(yieldAfter);
