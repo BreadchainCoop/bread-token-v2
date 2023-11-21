@@ -73,7 +73,7 @@ contract Bread is
         if (amount < 2) revert BurnZero();
         _burn(msg.sender, amount);
         
-        /// @dev we need to reduce withdrawal maount by 1 wei
+        /// @dev we need to reduce withdrawal amount by 1 wei
         /// because the sxDAI contract can round down by 1 and cause issues.
         uint256 withdrawAmount = amount-1;
         sexyDai.withdraw(withdrawAmount, address(this), address(this));
