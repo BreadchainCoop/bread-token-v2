@@ -126,7 +126,7 @@ contract BreadTest is Test {
 
         balBefore = address(this).balance;
         breadToken.burn(0.5 ether, address(this));
-        assertEq(balBefore + 0.5 ether - 1, address(this).balance);
+        assertEq(balBefore + 0.5 ether, address(this).balance);
 
         supplyAfter = breadToken.totalSupply();
         assertEq(supplyAfter, 0.5 ether);
@@ -135,13 +135,16 @@ contract BreadTest is Test {
         uint256 randHolderBalBefore = address(randomEOA).balance;
         breadToken.burn(0.5 ether, address(randomEOA));
         assertEq(balBefore, address(this).balance);
-        assertEq(randHolderBalBefore + 0.5 ether - 1, address(randomEOA).balance);
+        assertEq(randHolderBalBefore + 0.5 ether, address(randomEOA).balance);
         supplyAfter = breadToken.totalSupply();
         assertEq(supplyAfter, 0);
 
+        /// @dev NOTE we are "stealing" some wei from the yield when we mint and burn
+        /// since sxDAI can round down by 1 wei
         yieldBefore = yieldAfter;
         yieldAfter = breadToken.yieldAccrued();
-        assertEq(yieldAfter, yieldBefore);
+        assertGt(yieldBefore, yieldAfter);
+        assertEq(yieldBefore - yieldAfter, 2);
 
         uint256 ownerBalBefore = wxDai.balanceOf(address(this));
         breadToken.claimYield(yieldAfter);
