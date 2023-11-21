@@ -38,6 +38,10 @@ contract BreadTest is Test {
 
         sexyDai = IERC20(0xaf204776c7245bF4147c2612BF6e5972Ee483701);
         wxDai = IERC20(0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d);
+
+        /// @dev we mint one BREAD and burn it to simulate what we'll do in reality
+        /// this helps us avoid inflation attacks and underflow issues if burn totalSupply() in some cases
+        breadToken.mint{value: 1 ether}(0x0000000000000000000000000000000000000001);
     }
 
     function test_basic_deposits() public {
@@ -45,9 +49,10 @@ contract BreadTest is Test {
         uint256 balBefore = breadToken.balanceOf(address(this));
         uint256 contractBalBefore = sexyDai.balanceOf(address(breadToken));
 
-        assertEq(supplyBefore, 0);
+        assertEq(supplyBefore, 1 ether);
         assertEq(balBefore, 0);
-        assertEq(contractBalBefore, 0);
+        assertGt(contractBalBefore, 0);
+        assertLt(contractBalBefore, 1 ether);
 
         breadToken.mint{value: 1 ether}(address(this));
 
@@ -55,15 +60,17 @@ contract BreadTest is Test {
         uint256 balAfter = breadToken.balanceOf(address(this));
         uint256 contractBalAfter = sexyDai.balanceOf(address(breadToken));
 
-        assertEq(supplyAfter, 1 ether);
-        assertEq(balAfter, 1 ether);
-        assertGt(contractBalAfter, 0);
-        assertLt(contractBalAfter, 1 ether);
+        assertEq(supplyAfter, supplyBefore + 1 ether);
+        assertEq(balAfter, balBefore + 1 ether);
+        assertGt(contractBalAfter, contractBalBefore);
+        assertLt(contractBalAfter, supplyBefore + 1 ether);
 
         uint256 yieldBefore = breadToken.yieldAccrued();
         assertEq(yieldBefore, 0);
 
         contractBalBefore = contractBalAfter;
+        supplyBefore = supplyAfter;
+        balBefore = balAfter;
 
         uint256 randomHolderBalBefore = breadToken.balanceOf(randomHolder);
         assertEq(randomHolderBalBefore, 0);
@@ -71,12 +78,12 @@ contract BreadTest is Test {
         breadToken.mint{value: 5 ether}(randomHolder);
 
         supplyAfter = breadToken.totalSupply();
-        assertEq(supplyAfter, 6 ether);
+        assertEq(supplyAfter, supplyBefore + 5 ether);
         balAfter = breadToken.balanceOf(address(this));
-        assertEq(balAfter, 1 ether);
+        assertEq(balAfter, balBefore);
         contractBalAfter = sexyDai.balanceOf(address(breadToken));
         assertGt(contractBalAfter, contractBalBefore);
-        assertLt(contractBalAfter, 6 ether);
+        assertLt(contractBalAfter, supplyBefore + 5 ether);
 
         uint256 randomHolderBalAfter = breadToken.balanceOf(randomHolder);
         assertEq(randomHolderBalAfter, 5 ether);
@@ -96,11 +103,9 @@ contract BreadTest is Test {
     function test_basic_withdraws() public {
         uint256 supplyBefore = breadToken.totalSupply();
         uint256 balBefore = breadToken.balanceOf(address(this));
-        uint256 contractBalBefore = sexyDai.balanceOf(address(breadToken));
 
-        assertEq(supplyBefore, 0);
+        assertEq(supplyBefore, 1 ether);
         assertEq(balBefore, 0);
-        assertEq(contractBalBefore, 0);
 
         breadToken.mint{value: 1 ether}(address(this));
 
@@ -108,10 +113,10 @@ contract BreadTest is Test {
         uint256 balAfter = breadToken.balanceOf(address(this));
         uint256 contractBalAfter = sexyDai.balanceOf(address(breadToken));
 
-        assertEq(supplyAfter, 1 ether);
-        assertEq(balAfter, 1 ether);
+        assertEq(supplyAfter, supplyBefore + 1 ether);
+        assertEq(balAfter, balBefore + 1 ether);
         assertGt(contractBalAfter, 0);
-        assertLt(contractBalAfter, 1 ether);
+        assertLt(contractBalAfter, supplyAfter);
 
         uint256 yieldBefore = breadToken.yieldAccrued();
         assertEq(yieldBefore, 0);
@@ -129,7 +134,7 @@ contract BreadTest is Test {
         assertEq(balBefore + 0.5 ether, address(this).balance);
 
         supplyAfter = breadToken.totalSupply();
-        assertEq(supplyAfter, 0.5 ether);
+        assertEq(supplyAfter, 1.5 ether);
 
         balBefore = address(this).balance;
         uint256 randHolderBalBefore = address(randomEOA).balance;
@@ -137,7 +142,7 @@ contract BreadTest is Test {
         assertEq(balBefore, address(this).balance);
         assertEq(randHolderBalBefore + 0.5 ether, address(randomEOA).balance);
         supplyAfter = breadToken.totalSupply();
-        assertEq(supplyAfter, 0);
+        assertEq(supplyAfter, 1 ether);
 
         /// @dev NOTE we are "stealing" some wei from the yield when we mint and burn
         /// since sxDAI can round down by 1 wei -- this should be fine, 
@@ -146,7 +151,7 @@ contract BreadTest is Test {
         /// (since no one can burn the last wei of the supply, which can trigger it)
         yieldBefore = yieldAfter;
         yieldAfter = breadToken.yieldAccrued();
-        assertEq(yieldBefore - 2, yieldAfter);
+        assertEq(yieldBefore - 1, yieldAfter);
 
         uint256 ownerBalBefore = wxDai.balanceOf(address(this));
         breadToken.claimYield(yieldAfter);
