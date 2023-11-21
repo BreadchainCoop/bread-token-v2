@@ -48,7 +48,11 @@ contract Bread is
         sexyDai = ISXDAI(_sexyDai);
     }
 
-    function initialize(string memory name_, string memory symbol_, address owner_) external initializer {
+    function initialize(
+        string memory name_,
+        string memory symbol_,
+        address owner_
+    ) external initializer {
         __ERC20_init(name_, symbol_);
         __Ownable_init(owner_);
     }
@@ -66,12 +70,15 @@ contract Bread is
     }
 
     function burn(uint256 amount, address receiver) external {
-        if (amount == 0) revert BurnZero();
+        if (amount < 2) revert BurnZero();
         _burn(msg.sender, amount);
-
-        sexyDai.withdraw(amount, address(this), address(this));
-        wxDai.withdraw(amount);
-        _nativeTransfer(receiver, amount);
+        
+        /// @dev we need to reduce withdrawal maount by 1 wei
+        /// because the sxDAI contract can round down by 1 and cause issues.
+        uint256 withdrawAmount = amount-1;
+        sexyDai.withdraw(withdrawAmount, address(this), address(this));
+        wxDai.withdraw(withdrawAmount);
+        _nativeTransfer(receiver, withdrawAmount);
 
         emit Burned(receiver, amount);
     }
@@ -97,7 +104,9 @@ contract Bread is
 
     function _yieldAccrued() internal view returns (uint256) {
         uint256 bal = IERC20(address(sexyDai)).balanceOf(address(this));
-        return sexyDai.convertToAssets(bal) - totalSupply();
+        uint256 assets = sexyDai.convertToAssets(bal);
+        uint256 supply = totalSupply();
+        return assets > supply ? assets - supply : 0;
     }
 
     function _nativeTransfer(address to, uint256 amount) internal {
