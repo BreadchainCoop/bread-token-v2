@@ -24,7 +24,8 @@ contract Bread is
     OwnableUpgradeable
 {
     using SafeERC20 for IERC20;
-
+    
+    address public yieldDisburser; 
     error MintZero();
     error BurnZero();
     error ClaimZero();
@@ -88,6 +89,12 @@ contract Bread is
         sexyDai.withdraw(amount, owner(), address(this));
 
         emit ClaimedYield(amount);
+    }
+    function claimYieldForDisbursement() external {
+        require(msg.sender == yieldDisburser);
+        uint256 yield = _yieldAccrued();
+        if (yield == 0) return;
+        sexyDai.withdraw(yield, yieldDisburser, address(this));
     }
 
     function rescueToken(address tok, uint256 amount) external onlyOwner {
