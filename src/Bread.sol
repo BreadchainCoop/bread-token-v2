@@ -11,16 +11,17 @@ import {
     IERC20
 } from "openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {
-    ERC20Upgradeable
-} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
-import {
     OwnableUpgradeable
 } from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {
+    ERC20VotesUpgradeable
+}
+from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import {IWXDAI} from "./interfaces/IWXDAI.sol";
 import {ISXDAI} from "./interfaces/ISXDAI.sol";
 
 contract Bread is
-    ERC20Upgradeable,
+    ERC20VotesUpgradeable,
     OwnableUpgradeable
 {
     using SafeERC20 for IERC20;
