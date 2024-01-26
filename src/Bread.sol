@@ -57,7 +57,9 @@ contract Bread is
         __ERC20_init(name_, symbol_);
         __Ownable_init(owner_);
     }
-
+    function setYieldDisburser(address _yieldDisburser) external onlyOwner {
+        yieldDisburser = _yieldDisburser;
+    }
     function mint(address receiver) external payable {
         uint256 val = msg.value;
         if (val == 0) revert MintZero();
@@ -91,7 +93,7 @@ contract Bread is
         emit ClaimedYield(amount);
     }
     function claimYieldForDisbursement() external {
-        require(msg.sender == yieldDisburser);
+        require(msg.sender == yieldDisburser && yieldDisburser != address(0));
         uint256 yield = _yieldAccrued();
         if (yield == 0) return;
         sexyDai.withdraw(yield, yieldDisburser, address(this));
