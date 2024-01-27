@@ -26,20 +26,21 @@ contract Bread is
 {
     using SafeERC20 for IERC20;
     
-    address public yieldDisburser; 
+    address public yieldClaimer;
     error MintZero();
     error BurnZero();
     error ClaimZero();
     error YieldInsufficient();
     error IsCollateral();
     error NativeTransferFailed();
+    error OnlyClaimers();
 
     IWXDAI public immutable wxDai;
     ISXDAI public immutable sexyDai;
 
     event Minted(address receiver, uint256 amount);
     event Burned(address receiver, uint256 amount);
-    event YieldDisburserSet(address yieldDisburser);
+    event YieldClaimerSet(address yieldClaimer);
     event ClaimedYield(uint256 amount);
 
     constructor(
@@ -58,10 +59,12 @@ contract Bread is
         __ERC20_init(name_, symbol_);
         __Ownable_init(owner_);
     }
-    function setYieldDisburser(address _yieldDisburser) external onlyOwner {
-        yieldDisburser = _yieldDisburser;
-        emit YieldDisburserSet(_yieldDisburser);
+
+    function setYieldClaimer(address _yieldClaimer) external onlyOwner {
+        yieldClaimer = _yieldClaimer;
+        emit YieldClaimerSet(_yieldClaimer);
     }
+
     function mint(address receiver) external payable {
         uint256 val = msg.value;
         if (val == 0) revert MintZero();
@@ -85,20 +88,15 @@ contract Bread is
         emit Burned(receiver, amount);
     }
 
-    function claimYield(uint256 amount) external onlyOwner{
+    function claimYield(uint256 amount, address receiver) external {
+        if (msg.sender != owner() || msg.sender != yieldClaimer) revert OnlyClaimers();
         if (amount == 0) revert ClaimZero();
         uint256 yield = _yieldAccrued();
         if (yield < amount) revert YieldInsufficient();
 
-        sexyDai.withdraw(amount, owner(), address(this));
+        _mint(receiver, amount);
 
         emit ClaimedYield(amount);
-    }
-    function claimYieldForDisbursement() external {
-        require(msg.sender == yieldDisburser && yieldDisburser != address(0));
-        uint256 yield = _yieldAccrued();
-        if (yield == 0) return;
-        sexyDai.withdraw(yield, yieldDisburser, address(this));
     }
 
     function rescueToken(address tok, uint256 amount) external onlyOwner {

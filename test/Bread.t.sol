@@ -153,9 +153,14 @@ contract BreadTest is Test {
         yieldAfter = breadToken.yieldAccrued();
         assertEq(yieldBefore - 1, yieldAfter);
 
-        uint256 ownerBalBefore = wxDai.balanceOf(address(this));
-        breadToken.claimYield(yieldAfter);
-        assertEq(ownerBalBefore + yieldAfter, wxDai.balanceOf(address(this)));
+        // check claim
+        address yieldReceiver = 0x0000000000000000000000000000000000000002;
+        uint256 receiverBalBefore = breadToken.balanceOf(yieldReceiver);
+        supplyBefore = supplyAfter;
+        breadToken.claimYield(yieldAfter, yieldReceiver);
+        assertEq(receiverBalBefore + yieldAfter, breadToken.balanceOf(yieldReceiver));
+        supplyAfter = breadToken.totalSupply();
+        assertEq(supplyBefore+yieldAfter, supplyAfter);
     }
 
     receive() external payable {}
