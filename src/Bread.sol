@@ -39,7 +39,7 @@ contract Bread is
 
     event Minted(address receiver, uint256 amount);
     event Burned(address receiver, uint256 amount);
-
+    event YieldDisburserSet(address yieldDisburser);
     event ClaimedYield(uint256 amount);
 
     constructor(
@@ -60,6 +60,7 @@ contract Bread is
     }
     function setYieldDisburser(address _yieldDisburser) external onlyOwner {
         yieldDisburser = _yieldDisburser;
+        emit YieldDisburserSet(_yieldDisburser);
     }
     function mint(address receiver) external payable {
         uint256 val = msg.value;
@@ -84,7 +85,7 @@ contract Bread is
         emit Burned(receiver, amount);
     }
 
-    function claimYield(uint256 amount) external {
+    function claimYield(uint256 amount) external onlyOwner{
         if (amount == 0) revert ClaimZero();
         uint256 yield = _yieldAccrued();
         if (yield < amount) revert YieldInsufficient();
