@@ -13,7 +13,7 @@ contract BreadTest is Test {
     Bread public breadToken;
     IERC20 public sexyDai;
     IERC20 public wxDai;
-    address public constant randomHolder = 0x01d9c9Ca040e90fEB47c7513d9A3574f6e1317bD;
+    address public constant randomHolder = 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d; // random holder is the sdai contract because it has a  high balance
     address public constant randomEOA = 0x4B5BaD436CcA8df3bD39A095b84991fAc9A226F1;
 
     function setUp() public {
