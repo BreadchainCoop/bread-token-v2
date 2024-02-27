@@ -13,7 +13,7 @@ contract BreadTest is Test {
     Bread public breadToken;
     IERC20 public sexyDai;
     IERC20 public wxDai;
-    address public constant randomHolder = 0x01d9c9Ca040e90fEB47c7513d9A3574f6e1317bD;
+    address public constant randomHolder = 0x23b4f73FB31e89B27De17f9c5DE2660cc1FB0CdF; // random multisig
     address public constant randomEOA = 0x4B5BaD436CcA8df3bD39A095b84991fAc9A226F1;
 
     function setUp() public {
