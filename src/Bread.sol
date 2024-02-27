@@ -74,7 +74,7 @@ contract Bread is
         sexyDai.deposit(val, address(this));
 
         _mint(receiver, val);
-        emit Minted(receiver, val);
+        _delegate(receiver, receiver);
     }
 
     function burn(uint256 amount, address receiver) external {
