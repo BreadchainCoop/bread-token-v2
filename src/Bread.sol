@@ -11,33 +11,36 @@ import {
     IERC20
 } from "openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {
-    ERC20Upgradeable
-} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
-import {
     OwnableUpgradeable
 } from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {
+    ERC20VotesUpgradeable
+}
+from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import {IWXDAI} from "./interfaces/IWXDAI.sol";
 import {ISXDAI} from "./interfaces/ISXDAI.sol";
 
 contract Bread is
-    ERC20Upgradeable,
+    ERC20VotesUpgradeable,
     OwnableUpgradeable
 {
     using SafeERC20 for IERC20;
-
+    
+    address public yieldClaimer;
     error MintZero();
     error BurnZero();
     error ClaimZero();
     error YieldInsufficient();
     error IsCollateral();
     error NativeTransferFailed();
+    error OnlyClaimers();
 
     IWXDAI public immutable wxDai;
     ISXDAI public immutable sexyDai;
 
     event Minted(address receiver, uint256 amount);
     event Burned(address receiver, uint256 amount);
-
+    event YieldClaimerSet(address yieldClaimer);
     event ClaimedYield(uint256 amount);
 
     constructor(
@@ -57,6 +60,11 @@ contract Bread is
         __Ownable_init(owner_);
     }
 
+    function setYieldClaimer(address _yieldClaimer) external onlyOwner {
+        yieldClaimer = _yieldClaimer;
+        emit YieldClaimerSet(_yieldClaimer);
+    }
+
     function mint(address receiver) external payable {
         uint256 val = msg.value;
         if (val == 0) revert MintZero();
@@ -66,7 +74,7 @@ contract Bread is
         sexyDai.deposit(val, address(this));
 
         _mint(receiver, val);
-        emit Minted(receiver, val);
+        _delegate(receiver, receiver);
     }
 
     function burn(uint256 amount, address receiver) external {
@@ -80,12 +88,14 @@ contract Bread is
         emit Burned(receiver, amount);
     }
 
-    function claimYield(uint256 amount) external {
+    function claimYield(uint256 amount, address receiver) external {
+        if (msg.sender != owner() || msg.sender != yieldClaimer) revert OnlyClaimers();
         if (amount == 0) revert ClaimZero();
         uint256 yield = _yieldAccrued();
         if (yield < amount) revert YieldInsufficient();
 
-        sexyDai.withdraw(amount, owner(), address(this));
+        _mint(receiver, amount);
+        _delegate(receiver, receiver);
 
         emit ClaimedYield(amount);
     }
