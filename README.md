@@ -22,7 +22,7 @@ forge compile
 ## Test
 
 ```bash
-forge test --fork-url "YOUR QUICKNODE GNOSIS CHAIN ENDPOINT" --fork-block-number 31060200 -vv
+forge test --fork-url "https://rpc.gnosis.gateway.fm" -vv
 ```
 
 create an account [here](https://www.quicknode.com/) and get a gnosis chain endpoint on the free tier to get running the test suite.
