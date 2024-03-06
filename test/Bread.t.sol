@@ -129,11 +129,8 @@ contract BreadTest is Test {
 
         uint256 yieldAfter = breadToken.yieldAccrued();
         assertGt(yieldAfter, yieldBefore);
-
-       
-
-        
     }
+
     function test_burn() public {
         vm.roll(32661492);
         uint256 checkpoint = breadToken.numCheckpoints(randomHolder);
@@ -161,6 +158,7 @@ contract BreadTest is Test {
         assertEq(balBefore + 0.5 ether, address(this).balance);
         assertEq(supplyAfter, supplyBefore - 0.5 ether);
     }
+
     function test_yield() public {
         vm.roll(32661496);
         uint256 supplyBefore = breadToken.totalSupply();
@@ -184,16 +182,25 @@ contract BreadTest is Test {
         vm.roll(32661498);
         uint256 yieldAfter = breadToken.yieldAccrued();
         assertGt(yieldAfter, yieldBefore);
+
+        // @NOTE: here we show that on every burn we "steal" 1 wei from the yield bc
+        // sxDAI contract rounds down by one wei on deposits but we want to preserve exact 1:1 xDAI BREAD relationship
+        // this should not cause problems bc if we send 1 bread to irretrievable address
+        // as then taking the "final" BREAD supply out of circulation when 0 yield has accrued (which would cause a off-by-1-wei revert) can't happen
         breadToken.burn(1 ether, address(this));
         yieldBefore = yieldAfter;
         yieldAfter = breadToken.yieldAccrued();
-        // assertEq(yieldBefore - 1, yieldAfter);
+        assertEq(yieldBefore - 1, yieldAfter);
         vm.roll(32661499);
 
-        uint256 ownerBalBefore = wxDai.balanceOf(address(this));
+        uint256 ownerBalBeforeWxDAI = wxDai.balanceOf(address(this));
+        uint256 ownerBalBeforeBread = breadToken.balanceOf(address(this));
         breadToken.claimYield(yieldAfter, address(this));
+        assertEq(ownerBalBeforeWxDAI, wxDai.balanceOf(address(this)));
+        assertLt(ownerBalBeforeBread, breadToken.balanceOf(address(this)));
+        assertEq(ownerBalBeforeBread+yieldAfter, breadToken.balanceOf(address(this)));
         yieldAfter = breadToken.yieldAccrued();
-        assertEq(ownerBalBefore + yieldAfter, wxDai.balanceOf(address(this)));
+        assertEq(yieldAfter, 0);
     }
 
     receive() external payable {}
