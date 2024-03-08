@@ -15,6 +15,8 @@ contract BreadTest is Test {
     IERC20 public wxDai;
     address public constant randomHolder = 0x23b4f73FB31e89B27De17f9c5DE2660cc1FB0CdF; // random multisig
     address public constant randomEOA = 0x4B5BaD436CcA8df3bD39A095b84991fAc9A226F1;
+    address[] receivers;
+    uint256[] amounts;
 
     function setUp() public {
         address breadImpl = address(new Bread(
@@ -243,6 +245,65 @@ contract BreadTest is Test {
         assertEq(yieldBefore - 1, yieldAfter);
 
     }
+    function testBatchMint() public {
+        receivers.push(address(0x42));
+        amounts.push(1 ether);
+
+        // Expect no revert
+        vm.expectRevert(0x4406518e);
+        breadToken.batchMint(receivers, amounts);
+
+        receivers.push(address(0x43)); // Adding an extra receiver to cause mismatch
+        vm.expectRevert("Mismatched arrays");
+        breadToken.batchMint{value: 1 ether}(receivers, amounts);
+        amounts.push(0 ether);
+        vm.expectRevert(0x4406518e);
+        breadToken.batchMint{value: 2 ether}(receivers, amounts);
+        amounts.pop();
+        amounts.pop();
+        amounts.push(1 ether);
+        amounts.push(1 ether);
+        uint256 balbeforeAdr1 = breadToken.balanceOf(address(0x42));
+        uint256 balbeforeAdr2 = breadToken.balanceOf(address(0x43));
+        assertEq(balbeforeAdr1, 0);
+        assertEq(balbeforeAdr2, 0);
+        breadToken.batchMint{value: 2 ether}(receivers, amounts);
+        uint256 balAfterAdr1 = breadToken.balanceOf(address(0x42));
+        uint256 balAfterAdr2 = breadToken.balanceOf(address(0x43));
+        assertEq(balAfterAdr1, 1 ether);
+        assertEq(balAfterAdr2, 1 ether);
+    }
+
+    function testFuzzyBatchMint(uint256 seed, uint256 numReceivers) public {
+    // Fuzzing with constraints
+    vm.assume(numReceivers > 0 && numReceivers <= 10); // Limit the number of receivers to a reasonable range
+
+    uint256 totalMintAmount = 0;
+    address[] memory _receivers = new address[](numReceivers);
+    uint256[] memory _amounts = new uint256[](numReceivers);
+
+    for (uint256 i = 0; i < numReceivers; i++) {
+        // Generate a pseudo-random address based on the seed and index
+        address receiver = address(uint160(uint256(keccak256(abi.encode(seed, i)))));
+        uint256 amount = (seed % 10 + 1) * 0.1 ether; // Amounts between 0.1 ether and 1 ether
+
+        _receivers[i] = receiver;
+        _amounts[i] = amount;
+        totalMintAmount += amount;
+    }
+
+    vm.deal(address(breadToken), totalMintAmount); // Ensure the contract has enough ether for minting
+    breadToken.batchMint{value: totalMintAmount}(_receivers, _amounts); // Mint with the generated values
+
+    // Verifying the results
+    for (uint256 i = 0; i < numReceivers; i++) {
+        uint256 receiverBalance = breadToken.balanceOf(_receivers[i]);
+        assertEq(receiverBalance, _amounts[i], "Balance mismatch after batch mint");
+    }
+
+    uint256 totalSupplyAfter = breadToken.totalSupply();
+    assertEq(totalSupplyAfter, totalMintAmount + 1 ether, "Total supply should increase by the total mint amount");
+}
 
     receive() external payable {}
 }
