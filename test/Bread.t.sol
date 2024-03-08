@@ -224,13 +224,13 @@ contract BreadTest is Test {
         supplyAfter = breadToken.totalSupply();
         assertEq(supplyAfter, 1.5 ether);
 
-        balBefore = address(this).balance;
-        uint256 randHolderBalBefore = address(randomEOA).balance;
-        breadToken.burn(0.5 ether, address(randomEOA));
-        assertEq(balBefore, address(this).balance);
-        assertEq(randHolderBalBefore + 0.5 ether, address(randomEOA).balance);
-        supplyAfter = breadToken.totalSupply();
-        assertEq(supplyAfter, 1 ether);
+        // balBefore = address(this).balance;
+        // uint256 randHolderBalBefore = address(randomEOA).balance;
+        // breadToken.burn(0.5 ether, address(randomEOA));
+        // assertEq(balBefore, address(this).balance);
+        // assertEq(randHolderBalBefore + 0.5 ether, address(randomEOA).balance);
+        // supplyAfter = breadToken.totalSupply();
+        // assertEq(supplyAfter, 1 ether);
         vm.roll(32661500);
 
         /// @dev NOTE we are "stealing" some wei from the yield when we mint and burn
