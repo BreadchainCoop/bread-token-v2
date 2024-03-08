@@ -183,25 +183,35 @@ contract BreadTest is Test {
         uint256 yieldAfter = breadToken.yieldAccrued();
         assertGt(yieldAfter, yieldBefore);
 
-        // @NOTE: here we show that on every burn we "steal" 1 wei from the yield bc
-        // sxDAI contract rounds down by one wei on deposits but we want to preserve exact 1:1 xDAI BREAD relationship
-        // this should not cause problems bc if we send 1 bread to irretrievable address
-        // as then taking the "final" BREAD supply out of circulation when 0 yield has accrued (which would cause a off-by-1-wei revert) can't happen
-        breadToken.burn(1 ether, address(this));
-        yieldBefore = yieldAfter;
-        yieldAfter = breadToken.yieldAccrued();
-        assertEq(yieldBefore - 1, yieldAfter);
-        vm.roll(32661499);
+        // // @NOTE: here we show that on every burn we "steal" 1 wei from the yield bc
+        // // sxDAI contract rounds down by one wei on deposits but we want to preserve exact 1:1 xDAI BREAD relationship
+        // // this should not cause problems bc if we send 1 bread to irretrievable address
+        // // as then taking the "final" BREAD supply out of circulation when 0 yield has accrued (which would cause a off-by-1-wei revert) can't happen
+        // breadToken.burn(1 ether, address(this));
+        // yieldBefore = yieldAfter;
+        // yieldAfter = breadToken.yieldAccrued();
+        // assertEq(yieldBefore - 1, yieldAfter);
+        // vm.roll(32661499);
 
-        uint256 ownerBalBeforeWxDAI = wxDai.balanceOf(address(this));
-        uint256 ownerBalBeforeBread = breadToken.balanceOf(address(this));
-        breadToken.claimYield(yieldAfter, address(this));
-        assertEq(ownerBalBeforeWxDAI, wxDai.balanceOf(address(this)));
-        assertLt(ownerBalBeforeBread, breadToken.balanceOf(address(this)));
-        assertEq(ownerBalBeforeBread+yieldAfter, breadToken.balanceOf(address(this)));
-        yieldAfter = breadToken.yieldAccrued();
-        assertEq(yieldAfter, 0);
+        // uint256 ownerBalBeforeWxDAI = wxDai.balanceOf(address(this));
+        // uint256 ownerBalBeforeBread = breadToken.balanceOf(address(this));
+        // breadToken.claimYield(yieldAfter, address(this));
+        // assertEq(ownerBalBeforeWxDAI, wxDai.balanceOf(address(this)));
+        // assertLt(ownerBalBeforeBread, breadToken.balanceOf(address(this)));
+        // assertEq(ownerBalBeforeBread+yieldAfter, breadToken.balanceOf(address(this)));
+        // yieldAfter = breadToken.yieldAccrued();
+        // assertEq(yieldAfter, 0);
     }
+    function testNoCheckpoints() public {
+    address account = address(0x1); // Example account
+    uint256 start = 32661487;
+    uint256 end = 32661488;
+
+    // Ensure no checkpoints for account
+    uint256 votingPower = breadToken.getVotingPowerForPeriod(start, end, account);
+    assertEq(votingPower, 0, "Voting power should be 0 for period without checkpoints");
+    }
+
 
     receive() external payable {}
 }

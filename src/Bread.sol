@@ -17,6 +17,9 @@ import {
     ERC20VotesUpgradeable
 }
 from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
+import {
+    Checkpoints
+} from "@openzeppelin/contracts/utils/structs/Checkpoints.sol";
 import {IWXDAI} from "./interfaces/IWXDAI.sol";
 import {ISXDAI} from "./interfaces/ISXDAI.sol";
 
@@ -124,5 +127,24 @@ contract Bread is
         }
 
         if (!success) revert NativeTransferFailed();
+    }
+    function getVotingPowerForPeriod(uint256 start, uint256 end, address account) external view returns (uint256) {
+        uint32 latestCheckpointPos = numCheckpoints(account);
+        require(latestCheckpointPos > 0, "No checkpoints for account");
+        latestCheckpointPos--; // -1 because it's 0-indexed
+        uint256 votingPower = 0;
+        uint48 _prev_key = latestCheckpointPos; // Initializing the previous key
+        for (uint32 i = latestCheckpointPos - 1 ; ;i-- ) { // Looping through the checkpoints
+            Checkpoints.Checkpoint208 memory checkpoint = checkpoints(account, i); // Getting the checkpoint 
+            uint48 _key = checkpoint._key; // Block number
+            uint208 _value = checkpoint._value; // Voting power
+            if (_key <= end && _key >= start) {
+                votingPower += (_value * (_key - _prev_key)); // Adding the voting power for the period
+            }
+            if (_key <= start) {
+                return votingPower; // If we are before the start of the period, we can return the voting power
+            }
+            _prev_key = _key; // Updating the previous key
+        }
     }
 }
