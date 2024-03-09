@@ -76,7 +76,7 @@ contract Bread is
         _mint(receiver, val);
         _delegate(receiver, receiver);
     }
-    function batchMint(address[] calldata receivers, uint256[] calldata amounts) external payable {
+    function batchMint( uint256[] calldata amounts,address[] calldata receivers) external payable {
         uint256 val = msg.value;
         if (val == 0) revert MintZero();
         if (receivers.length != amounts.length) revert("Mismatched arrays");
