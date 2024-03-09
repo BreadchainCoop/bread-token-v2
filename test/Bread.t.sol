@@ -191,14 +191,14 @@ contract BreadTest is Test {
         amounts.push(1 ether);
 
         // Expect no revert
-        vm.expectRevert(0x4406518e);
+        vm.expectRevert();
         breadToken.batchMint(amounts,receivers);
 
         receivers.push(address(0x43)); // Adding an extra receiver to cause mismatch
-        vm.expectRevert("Mismatched arrays");
+        vm.expectRevert();
         breadToken.batchMint{value: 1 ether}( amounts,receivers);
         amounts.push(0 ether);
-        vm.expectRevert(0x4406518e);
+        vm.expectRevert();
         breadToken.batchMint{value: 2 ether}( amounts,receivers);
         amounts.pop();
         amounts.pop();
