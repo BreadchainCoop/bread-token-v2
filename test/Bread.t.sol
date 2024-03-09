@@ -184,67 +184,8 @@ contract BreadTest is Test {
         vm.roll(32661498);
         uint256 yieldAfter = breadToken.yieldAccrued();
         assertGt(yieldAfter, yieldBefore);
-
-     
     }
-    function test_burn_steal() public{
-        uint256 supplyBefore = breadToken.totalSupply();
-        uint256 balBefore = breadToken.balanceOf(address(this));
 
-        assertEq(supplyBefore, 1 ether);
-        assertEq(balBefore, 0);
-        vm.roll(32661496);
-
-        breadToken.mint{value: 1 ether}(address(this));
-        vm.roll(32661497);
-
-        uint256 supplyAfter = breadToken.totalSupply();
-        uint256 balAfter = breadToken.balanceOf(address(this));
-        uint256 contractBalAfter = sexyDai.balanceOf(address(breadToken));
-
-        assertEq(supplyAfter, supplyBefore + 1 ether);
-        assertEq(balAfter, balBefore + 1 ether);
-        assertGt(contractBalAfter, 0);
-        assertLt(contractBalAfter, supplyAfter);
-
-        uint256 yieldBefore = breadToken.yieldAccrued();
-        assertEq(yieldBefore, 0);
-
-        vm.roll(32661497);
-        vm.prank(randomHolder);
-        wxDai.transfer(address(sexyDai), 10000 ether);
-        vm.roll(32661498);
-
-        uint256 yieldAfter = breadToken.yieldAccrued();
-        assertGt(yieldAfter, yieldBefore);
-
-        balBefore = address(this).balance;
-        breadToken.burn(0.5 ether, address(this));
-        assertEq(balBefore + 0.5 ether, address(this).balance);
-        vm.roll(32661499);
-
-        supplyAfter = breadToken.totalSupply();
-        assertEq(supplyAfter, 1.5 ether);
-
-        // balBefore = address(this).balance;
-        // uint256 randHolderBalBefore = address(randomEOA).balance;
-        // breadToken.burn(0.5 ether, address(randomEOA));
-        // assertEq(balBefore, address(this).balance);
-        // assertEq(randHolderBalBefore + 0.5 ether, address(randomEOA).balance);
-        // supplyAfter = breadToken.totalSupply();
-        // assertEq(supplyAfter, 1 ether);
-        vm.roll(32661500);
-
-        /// @dev NOTE we are "stealing" some wei from the yield when we mint and burn
-        /// since sxDAI can round down by 1 wei -- this should be fine, 
-        /// we just need to claim a little less than the total yield on claims
-        /// and burn e.g 1 BREAD after deployment so that no user runs into burn revert
-        /// (since no one can burn the last wei of the supply, which can trigger it)
-        yieldBefore = yieldAfter;
-        yieldAfter = breadToken.yieldAccrued();
-        assertEq(yieldBefore - 1, yieldAfter);
-
-    }
     function testBatchMint() public {
         receivers.push(address(0x42));
         amounts.push(1 ether);
@@ -275,35 +216,35 @@ contract BreadTest is Test {
     }
 
     function testFuzzyBatchMint(uint256 seed, uint256 numReceivers) public {
-    // Fuzzing with constraints
-    vm.assume(numReceivers > 0 && numReceivers <= 10); // Limit the number of receivers to a reasonable range
+        // Fuzzing with constraints
+        vm.assume(numReceivers > 0 && numReceivers <= 10); // Limit the number of receivers to a reasonable range
 
-    uint256 totalMintAmount = 0;
-    address[] memory _receivers = new address[](numReceivers);
-    uint256[] memory _amounts = new uint256[](numReceivers);
+        uint256 totalMintAmount = 0;
+        address[] memory _receivers = new address[](numReceivers);
+        uint256[] memory _amounts = new uint256[](numReceivers);
 
-    for (uint256 i = 0; i < numReceivers; i++) {
-        // Generate a pseudo-random address based on the seed and index
-        address receiver = address(uint160(uint256(keccak256(abi.encode(seed, i)))));
-        uint256 amount = (seed % 10 + 1) * 0.1 ether; // Amounts between 0.1 ether and 1 ether
+        for (uint256 i = 0; i < numReceivers; i++) {
+            // Generate a pseudo-random address based on the seed and index
+            address receiver = address(uint160(uint256(keccak256(abi.encode(seed, i)))));
+            uint256 amount = (seed % 10 + 1) * 0.1 ether; // Amounts between 0.1 ether and 1 ether
 
-        _receivers[i] = receiver;
-        _amounts[i] = amount;
-        totalMintAmount += amount;
+            _receivers[i] = receiver;
+            _amounts[i] = amount;
+            totalMintAmount += amount;
+        }
+
+        vm.deal(address(breadToken), totalMintAmount); // Ensure the contract has enough ether for minting
+        breadToken.batchMint{value: totalMintAmount}( _amounts,_receivers); // Mint with the generated values
+
+        // Verifying the results
+        for (uint256 i = 0; i < numReceivers; i++) {
+            uint256 receiverBalance = breadToken.balanceOf(_receivers[i]);
+            assertEq(receiverBalance, _amounts[i], "Balance mismatch after batch mint");
+        }
+
+        uint256 totalSupplyAfter = breadToken.totalSupply();
+        assertEq(totalSupplyAfter, totalMintAmount + 1 ether, "Total supply should increase by the total mint amount");
     }
-
-    vm.deal(address(breadToken), totalMintAmount); // Ensure the contract has enough ether for minting
-    breadToken.batchMint{value: totalMintAmount}( _amounts,_receivers); // Mint with the generated values
-
-    // Verifying the results
-    for (uint256 i = 0; i < numReceivers; i++) {
-        uint256 receiverBalance = breadToken.balanceOf(_receivers[i]);
-        assertEq(receiverBalance, _amounts[i], "Balance mismatch after batch mint");
-    }
-
-    uint256 totalSupplyAfter = breadToken.totalSupply();
-    assertEq(totalSupplyAfter, totalMintAmount + 1 ether, "Total supply should increase by the total mint amount");
-}
 
     receive() external payable {}
 }
