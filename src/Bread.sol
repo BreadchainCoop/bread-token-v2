@@ -109,7 +109,7 @@ contract Bread is
     }
 
     function claimYield(uint256 amount, address receiver) external {
-        if (msg.sender != owner() || msg.sender != yieldClaimer) revert OnlyClaimers();
+        if (msg.sender != owner() && msg.sender != yieldClaimer) revert OnlyClaimers();
         if (amount == 0) revert ClaimZero();
         uint256 yield = _yieldAccrued();
         if (yield < amount) revert YieldInsufficient();

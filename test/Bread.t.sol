@@ -184,6 +184,19 @@ contract BreadTest is Test {
         vm.roll(32661498);
         uint256 yieldAfter = breadToken.yieldAccrued();
         assertGt(yieldAfter, yieldBefore);
+
+         vm.roll(32661499);
+        breadToken.setYieldClaimer(randomHolder);
+        vm.roll(32661500);
+        vm.prank(randomHolder);
+        breadToken.claimYield(1 , randomHolder);
+        // uint256 bal = breadToken.balanceOf(address(this));
+        // assertEq(bal, 1);
+        // vm.roll(32661501);
+        // vm.prank(randomEOA);
+        // vm.expectRevert();
+        // breadToken.claimYield(1 ether, randomEOA);
+
     }
 
     function testBatchMint() public {
@@ -245,6 +258,7 @@ contract BreadTest is Test {
         uint256 totalSupplyAfter = breadToken.totalSupply();
         assertEq(totalSupplyAfter, totalMintAmount + 1 ether, "Total supply should increase by the total mint amount");
     }
+
 
     receive() external payable {}
 }
