@@ -511,6 +511,25 @@ contract BreadTest is Test {
         breadToken.batchMint{value:polygontotalSupply}(migration_amounts, migration_addresses);
         assertEq(breadToken.totalSupply(), polygontotalSupply + 1 ether);
     }
+    function test_fuzzy_migration(uint256 seed) public {
+        vm.assume(seed > 0);
+        vm.assume(seed % 10 > 0); // Ensure we have at least one account
+        uint256 accounts = seed % 50; 
+        uint256 expectedTotalSupply;
+
+        for (uint256 i = 0; i < accounts; i++) {
+            migration_addresses.push(address(uint160(uint256(keccak256(abi.encode(seed, i))))));
+            migration_amounts.push((seed % 10) * 0.1 ether);
+            expectedTotalSupply += migration_amounts[i];
+        }
+        vm.deal(address(this), expectedTotalSupply);
+        breadToken.batchMint{value:expectedTotalSupply}(migration_amounts, migration_addresses);
+        assertEq(breadToken.totalSupply(), expectedTotalSupply + 1 ether);
+        for (uint256 i = 0; i < accounts; i++) {
+            assertEq(breadToken.balanceOf(migration_addresses[i]), migration_amounts[i]);
+        }
+
+    }
 
     receive() external payable {}
 }
