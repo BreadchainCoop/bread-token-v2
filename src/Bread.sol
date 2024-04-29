@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 // Bread - An ERC20 stablecoin fully collateralized by Gnosis Chain xDAI
 // which earns yield via Gnosis Chain sDAI (aka sexyDAI)
