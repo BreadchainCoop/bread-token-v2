@@ -151,7 +151,7 @@ contract Bread is
         if (this.delegates(recipient) == address(0)) _delegate(recipient, recipient);
         return true;
     }
-    function transferFrom(address from, address to, uint256 value) public virtual returns (bool) {
+    function transferFrom(address from, address to, uint256 value) public override returns (bool) {
         super.transferFrom(from, to, value);
         if (this.delegates(to) == address(0)) _delegate(to, to);
         return true;
