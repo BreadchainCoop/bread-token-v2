@@ -76,7 +76,7 @@ contract Bread is
         sexyDai.deposit(val, address(this));
 
         _mint(receiver, val);
-        _delegate(receiver, receiver);
+        if (this.delegates(receiver) == address(0)) _delegate(receiver, receiver);
     }
 
     function batchMint( uint256[] calldata amounts,address[] calldata receivers) external payable {
@@ -145,4 +145,16 @@ contract Bread is
 
         if (!success) revert NativeTransferFailed();
     }
+
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
+        super.transfer(recipient, amount);
+        if (this.delegates(recipient) == address(0)) _delegate(recipient, recipient);
+        return true;
+    }
+    function transferFrom(address from, address to, uint256 value) public virtual returns (bool) {
+        super.transferFrom(from, to, value);
+        if (this.delegates(to) == address(0)) _delegate(to, to);
+        return true;
+    }
+
 }
