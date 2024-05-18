@@ -79,24 +79,6 @@ contract Bread is
         if (this.delegates(receiver) == address(0)) _delegate(receiver, receiver);
     }
 
-    function batchMint( uint256[] calldata amounts,address[] calldata receivers) external payable {
-        uint256 val = msg.value;
-        if (val == 0) revert MintZero();
-        if (receivers.length != amounts.length) revert MismatchArray();
-
-        wxDai.deposit{value: val}();
-        IERC20(address(wxDai)).safeIncreaseAllowance(address(sexyDai), val);
-        sexyDai.deposit(val, address(this));
-        uint256 amountsTotal; 
-        for (uint256 i = 0; i < receivers.length; i++) {
-            if (amounts[i] == 0) revert MintZero();
-            amountsTotal += amounts[i];
-            _mint(receivers[i], amounts[i]);
-            _delegate(receivers[i], receivers[i]);
-        }
-        if (amountsTotal != val) revert MismatchAmount();
-    }
-
     function burn(uint256 amount, address receiver) external {
         if (amount == 0) revert BurnZero();
         _burn(msg.sender, amount);
