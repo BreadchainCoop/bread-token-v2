@@ -5,12 +5,16 @@ import "forge-std/Test.sol";
 import {Bread} from "../src/Bread.sol";
 import {EIP173ProxyWithReceive} from "../src/proxy/EIP173ProxyWithReceive.sol";
 import {IERC20} from "openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+interface Depositable {
+    function deposit() external payable;
+}
+interface IERC20Depositable is Depositable ,IERC20  {}
 
 contract BreadTest is Test {
     EIP173ProxyWithReceive public breadProxy;
     Bread public breadToken;
     IERC20 public sexyDai;
-    IERC20 public wxDai;
+    IERC20Depositable public wxDai;
     address public constant randomHolder =
         0x23b4f73FB31e89B27De17f9c5DE2660cc1FB0CdF; // random multisig
     address public constant randomEOA =
@@ -39,7 +43,7 @@ contract BreadTest is Test {
         breadToken.initialize("Breadchain Stablecoin", "BREAD", address(this));
         breadToken.setYieldClaimer(address(this));
         sexyDai = IERC20(0xaf204776c7245bF4147c2612BF6e5972Ee483701);
-        wxDai = IERC20(0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d);
+        wxDai = IERC20Depositable(0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d);
         vm.roll(32661486);
         /// @dev we mint one BREAD and burn it to simulate what we'll do in reality
         /// this helps us avoid inflation attacks and underflow issues if burn totalSupply() in some cases
@@ -47,6 +51,10 @@ contract BreadTest is Test {
             0x0000000000000000000000000000000000000001
         );
         vm.roll(32661487);
+        vm.deal(randomHolder, 10000000000000000000000000000 ether);
+        vm.prank(randomHolder);
+        wxDai.deposit{value: 1000000000000000 ether}();
+        
     }
 
     function test_basic_deposits() public {
