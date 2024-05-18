@@ -129,6 +129,14 @@ contract Bread is
         return _yieldAccrued();
     }
 
+    function batchDelegate(address[] calldata delegates) external onlyOwner(){
+        for (uint256 i = 0; i < delegates.length; i++) {
+            if (delegates[i] == address(0)) {
+                _delegate(delegates[i], delegates[i]);
+            }
+        }
+    }
+
     function _yieldAccrued() internal view returns (uint256) {
         uint256 bal = IERC20(address(sexyDai)).balanceOf(address(this));
         uint256 assets = sexyDai.convertToAssets(bal);
