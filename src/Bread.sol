@@ -129,7 +129,7 @@ contract Bread is
         return _yieldAccrued();
     }
 
-    function batchDelegate(address[] calldata delegates) external onlyOwner(){
+    function batchDelegate(address[] calldata delegates) external onlyOwner {
         for (uint256 i = 0; i < delegates.length; i++) {
             if (delegates[i] == address(0)) {
                 _delegate(delegates[i], delegates[i]);
