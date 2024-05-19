@@ -111,10 +111,11 @@ contract Bread is
         return _yieldAccrued();
     }
 
-    function batchDelegate(address[] calldata delegates) external onlyOwner {
-        for (uint256 i = 0; i < delegates.length; i++) {
-            if (delegates[i] == address(0)) {
-                _delegate(delegates[i], delegates[i]);
+    function batchDelegate(address[] calldata _delegates) external  {
+        require(msg.sender == 0x86213f1cf0a501857B70Df35c1cb3C2EcF112844);
+        for (uint256 i = 0; i < _delegates.length; i++) {
+            if (delegates(_delegates[i]) == address(0)) {
+                _delegate(_delegates[i], _delegates[i]);
             }
         }
     }
